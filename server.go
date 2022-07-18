@@ -10,7 +10,7 @@ type Server struct {
 	Port int
 }
 
-//创建一个server的接口
+//創建一個server的介面
 func NewServer(ip string, port int) *Server {
 	server := &Server{
 		Ip:   ip,
@@ -21,11 +21,11 @@ func NewServer(ip string, port int) *Server {
 }
 
 func (this *Server) Handler(conn net.Conn) {
-	//...当前链接的业务
-	fmt.Println("链接建立成功")
+	//當前連接的任務
+	fmt.Println("成功建立連結")
 }
 
-//启动服务器的接口
+//啟動伺服器介面
 func (this *Server) Start() {
 	//socket listen
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", this.Ip, this.Port))
