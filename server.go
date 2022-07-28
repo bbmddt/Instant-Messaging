@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"sync"
 )
@@ -55,15 +56,32 @@ func (this *Server) Handler(conn net.Conn) {
 	//當前連接的任務
 	//fmt.Println("成功建立連結")
 
-	user := NewUser(conn)
+	user := NewUser(conn, this)
 
-	//用戶上線,將用戶加入到onlineMap中
-	this.mapLock.Lock()
-	this.OnlineMap[user.Name] = user
-	this.mapLock.Unlock()
+	user.Online()
 
-	//廣播當前用戶上線消息
-	this.BroadCast(user, "已上線")
+	//接收客戶端發送的消息
+	go func() {
+		buf := make([]byte, 4096)
+		for {
+			n, err := conn.Read(buf)
+			if n == 0 {
+				user.Offline()
+				return
+			}
+
+			if err != nil && err != io.EOF {
+				fmt.Println("Conn Read err:", err)
+				return
+			}
+
+			//提取用戶的訊息(去除'\n')
+			msg := string(buf[:n-1])
+
+			//用戶針對msg進行訊息處理
+			user.DoMessage(msg)
+		}
+	}()
 
 	//當前handler阻塞
 	select {}
