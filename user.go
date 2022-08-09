@@ -55,9 +55,25 @@ func (this *User) Offline() {
 
 }
 
+//發送訊息給當前User對應的客戶端
+func (u *User) SendMsg(msg string) {
+	u.conn.Write([]byte(msg))
+}
+
 //用戶處理訊息的業務
 func (this *User) DoMessage(msg string) {
-	this.server.BroadCast(this, msg)
+	if msg == "who" {
+		//查詢當前線上用戶清單
+
+		this.server.mapLock.Lock()
+		for _, user := range this.server.OnlineMap {
+			onlineMsg := "[" + user.Addr + "]" + user.Name + ":" + "上線中...\n"
+			this.SendMsg(onlineMsg)
+		}
+		this.server.mapLock.Unlock()
+	} else {
+		this.server.BroadCast(this, msg)
+	}
 }
 
 //監聽當前User channel的方法,一有訊息就直接發送給對端客戶端

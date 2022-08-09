@@ -19,7 +19,7 @@ type Server struct {
 	Message chan string
 }
 
-//創建一個server的介面
+//創建一個server的物件
 func NewServer(ip string, port int) *Server {
 	server := &Server{
 		Ip:        ip,
