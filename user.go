@@ -1,6 +1,8 @@
 package main
 
-import "net"
+import (
+	"net"
+)
 
 type User struct {
 	Name string
@@ -39,7 +41,7 @@ func (this *User) Online() {
 	this.server.mapLock.Unlock()
 
 	//廣播當前用戶上線消息
-	this.server.BroadCast(this, "已上線")
+	this.server.BroadCast(this, "已上線...")
 }
 
 //用戶的下線業務
@@ -50,8 +52,8 @@ func (this *User) Offline() {
 	delete(this.server.OnlineMap, this.Name)
 	this.server.mapLock.Unlock()
 
-	//廣播當前用戶上線消息
-	this.server.BroadCast(this, "下線")
+	//廣播當前用戶下線消息
+	this.server.BroadCast(this, "已下線...")
 
 }
 
@@ -71,6 +73,27 @@ func (this *User) DoMessage(msg string) {
 			this.SendMsg(onlineMsg)
 		}
 		this.server.mapLock.Unlock()
+
+		//修改用戶名稱
+	} else if len(msg) > 7 && msg[:7] == "rename/" {
+		//訊息格式: rename/金乘五
+		//newName := strings.Split(msg, "/")[1]
+		//原取newName方法太粗糙，優化後用slice取
+		newName := msg[7:]
+
+		//判斷名字是否與當前線上用戶同名
+		_, isExist := this.server.OnlineMap[newName]
+		if isExist {
+			this.SendMsg("已存在相同名稱...\n")
+		} else {
+			this.server.mapLock.Lock()
+			delete(this.server.OnlineMap, this.Name)
+			this.server.OnlineMap[newName] = this
+			this.server.mapLock.Unlock()
+
+			this.Name = newName
+			this.SendMsg("已更新名稱為:" + this.Name + "\n")
+		}
 	} else {
 		this.server.BroadCast(this, msg)
 	}
