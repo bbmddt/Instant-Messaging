@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"time"
 )
 
 type Server struct {
@@ -60,6 +61,9 @@ func (this *Server) Handler(conn net.Conn) {
 
 	user.Online()
 
+	//監控用戶是否活躍的channel
+	isLive := make(chan bool)
+
 	//接收客戶端發送的消息
 	go func() {
 		buf := make([]byte, 4096)
@@ -71,7 +75,7 @@ func (this *Server) Handler(conn net.Conn) {
 			}
 
 			if err != nil && err != io.EOF {
-				fmt.Println("Conn Read err:", err)
+				fmt.Println("Conn Read err:", err.Error())
 				return
 			}
 
@@ -80,11 +84,33 @@ func (this *Server) Handler(conn net.Conn) {
 
 			//用戶針對msg進行訊息處理
 			user.DoMessage(msg)
+
+			//用戶發送任意訊息，即表示活躍中
+			isLive <- true
 		}
 	}()
 
 	//當前handler阻塞
-	select {}
+	for {
+		select {
+		case <-isLive:
+			//觸發此case即表示用戶活躍中，
+			//不執行任何動作並進入下個for循環，以重置下個case的計時器。
+		case <-time.After(time.Second * 10):
+			//已閒置逾時，將當前的User強制下線
+
+			user.SendMsg("閒置過久...已將您登出!")
+
+			//銷毀踢除用戶的資源
+			close(user.C)
+
+			//關閉連線
+			conn.Close()
+
+			//退出當前Handler
+			return
+		}
+	}
 }
 
 //啟動伺服器介面
