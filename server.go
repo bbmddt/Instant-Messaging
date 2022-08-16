@@ -96,7 +96,7 @@ func (this *Server) Handler(conn net.Conn) {
 		case <-isLive:
 			//觸發此case即表示用戶活躍中，
 			//不執行任何動作並進入下個for循環，以重置下個case的計時器。
-		case <-time.After(time.Second * 10):
+		case <-time.After(time.Second * 30):
 			//已閒置逾時，將當前的User強制下線
 
 			user.SendMsg("閒置過久...已將您登出!")

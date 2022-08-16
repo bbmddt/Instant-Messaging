@@ -2,6 +2,7 @@ package main
 
 import (
 	"net"
+	"strings"
 )
 
 type User struct {
@@ -94,6 +95,34 @@ func (this *User) DoMessage(msg string) {
 			this.Name = newName
 			this.SendMsg("已更新名稱為:" + this.Name + "\n")
 		}
+
+		//私訊功能
+	} else if len(msg) > 4 && msg[:3] == `to"` {
+		//訊息格式: to"鄧只騎"
+
+		//1. 獲取對方的用戶名稱
+		remoteName := strings.Split(msg, `"`)[1]
+		if remoteName == "" {
+			this.SendMsg(`訊息格式錯誤，請使用\to"鄧只騎"hello\格式。` + "\n")
+			return
+		}
+
+		//2. 根據用戶名稱，得到對方User物件
+		remoteUser, ok := this.server.OnlineMap[remoteName]
+		if !ok {
+			this.SendMsg("查無此用戶名...\n")
+			return
+		}
+
+		//3. 獲取訊息內容，通過對方的User物件將內容發送過去
+		content := strings.Split(msg, `"`)[2]
+		if content == "" {
+			this.SendMsg("無訊息內容，請重新輸入...\n")
+			return
+		}
+
+		remoteUser.SendMsg(this.Name + " 私訊說:" + content)
+
 	} else {
 		this.server.BroadCast(this, msg)
 	}
