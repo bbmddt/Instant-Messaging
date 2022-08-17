@@ -56,7 +56,35 @@ func (c *Client) menu() bool {
 
 }
 
-// 封裝重新命名處理(選項模式-3)
+// 公開頻道(選項模式1)
+func (c *Client) PublicChat() {
+
+	var chatMsg string
+
+	//提示用戶輸入訊息
+	fmt.Println("===請輸入訊息內容，exit退出。")
+	fmt.Scanln(&chatMsg)
+
+	for chatMsg != "exit" {
+		//發送給伺服器
+
+		//內容不為空則發送
+		if len(chatMsg) != 0 {
+			sendMsg := chatMsg + "\n"
+			_, err := c.conn.Write([]byte(sendMsg))
+			if err != nil {
+				fmt.Println("conn.Write err:", err)
+				break
+			}
+		}
+
+		chatMsg = ""
+		fmt.Println("===請輸入訊息內容，exit退出。")
+		fmt.Scanln(&chatMsg)
+	}
+}
+
+// 重新命名處理(選項模式3)
 func (c *Client) ReName() bool {
 
 	fmt.Println("===請輸入用戶名稱:")
@@ -87,7 +115,7 @@ func (c *Client) Run() {
 		switch c.flag {
 		case 1:
 			//公開頻道
-			fmt.Println("公開頻道選項...")
+			c.PublicChat()
 		case 2:
 			//私人訊息
 			fmt.Println("私人訊息選項...")
