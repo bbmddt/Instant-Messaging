@@ -33,31 +33,31 @@ func NewServer(ip string, port int) *Server {
 }
 
 //監聽Message廣播訊息channel的goroutine，一有訊息就發送给全部的線上User
-func (this *Server) ListenMessager() {
+func (s *Server) ListenMessager() {
 	for {
-		msg := <-this.Message
+		msg := <-s.Message
 
 		//將msg發送給全部的線上User
-		this.mapLock.Lock()
-		for _, cli := range this.OnlineMap {
+		s.mapLock.Lock()
+		for _, cli := range s.OnlineMap {
 			cli.C <- msg
 		}
-		this.mapLock.Unlock()
+		s.mapLock.Unlock()
 	}
 }
 
 //廣播訊息的方法
-func (this *Server) BroadCast(user *User, msg string) {
+func (s *Server) BroadCast(user *User, msg string) {
 	sendMsg := "[" + user.Addr + "]" + user.Name + ":" + msg
 
-	this.Message <- sendMsg
+	s.Message <- sendMsg
 }
 
-func (this *Server) Handler(conn net.Conn) {
+func (s *Server) Handler(conn net.Conn) {
 	//當前連接的任務
 	//fmt.Println("成功建立連結")
 
-	user := NewUser(conn, this)
+	user := NewUser(conn, s)
 
 	user.Online()
 
@@ -96,7 +96,7 @@ func (this *Server) Handler(conn net.Conn) {
 		case <-isLive:
 			//觸發此case即表示用戶活躍中，
 			//不執行任何動作並進入下個for循環，以重置下個case的計時器。
-		case <-time.After(time.Second * 30):
+		case <-time.After(time.Second * 180):
 			//已閒置逾時，將當前的User強制下線
 
 			user.SendMsg("閒置過久...已將您登出!")
@@ -114,9 +114,9 @@ func (this *Server) Handler(conn net.Conn) {
 }
 
 //啟動伺服器介面
-func (this *Server) Start() {
+func (s *Server) Start() {
 	//socket listen
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", this.Ip, this.Port))
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", s.Ip, s.Port))
 	if err != nil {
 		fmt.Println("net.Listen err:", err)
 		return
@@ -125,7 +125,7 @@ func (this *Server) Start() {
 	defer listener.Close()
 
 	//啓動監聽Message的goroutine
-	go this.ListenMessager()
+	go s.ListenMessager()
 
 	for {
 		//accept
@@ -136,6 +136,6 @@ func (this *Server) Start() {
 		}
 
 		//do handler
-		go this.Handler(conn)
+		go s.Handler(conn)
 	}
 }

@@ -84,14 +84,64 @@ func (c *Client) PublicChat() {
 	}
 }
 
+// 私人訊息(選項模式2)
+
+//查詢在線用戶
+func (c *Client) CheckUsers() {
+	sendMsg := "who\n"
+	_, err := c.conn.Write([]byte(sendMsg))
+	if err != nil {
+		fmt.Println("conn.Write err:", err)
+		return
+	}
+}
+
+//私訊處理
+func (c *Client) PrivateChat() {
+
+	var remoteName string
+	var chatMsg string
+
+	//先查詢
+	c.CheckUsers()
+	fmt.Println("===請輸入私訊對象[名稱]，exit退出")
+	fmt.Scanln(&remoteName)
+
+	for remoteName != "exit" {
+		fmt.Println("===請輸入訊息內容，exit退出。")
+		fmt.Scanln(&chatMsg)
+
+		for chatMsg != "exit" {
+
+			//內容不為空則發送
+			if len(chatMsg) != 0 {
+				sendMsg := `to"` + remoteName + `"` + chatMsg + "\n\n"
+				_, err := c.conn.Write([]byte(sendMsg))
+				if err != nil {
+					fmt.Println("conn.Write err:", err)
+					break
+				}
+			}
+
+			chatMsg = ""
+			fmt.Println("===請輸入訊息內容，exit退出。")
+			fmt.Scanln(&chatMsg)
+		}
+
+		c.CheckUsers()
+		fmt.Println("===請輸入私訊對象[名稱]，exit退出")
+		fmt.Scanln(&remoteName)
+	}
+}
+
 // 重新命名處理(選項模式3)
 func (c *Client) ReName() bool {
 
 	fmt.Println("===請輸入用戶名稱:")
 	fmt.Scanln(&c.Name)
 
-	SendMsg := "rename/" + c.Name + "\n"
-	_, err := c.conn.Write([]byte(SendMsg))
+	sendMsg := "rename/" + c.Name + "\n"
+	_, err := c.conn.Write([]byte(sendMsg))
 	if err != nil {
 		fmt.Println("conn.Write err:", err)
 		return false
@@ -118,7 +168,7 @@ func (c *Client) Run() {
 			c.PublicChat()
 		case 2:
 			//私人訊息
-			fmt.Println("私人訊息選項...")
+			c.PrivateChat()
 		case 3:
 			//修改用戶名稱
 			c.ReName()
