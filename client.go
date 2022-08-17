@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"net"
+	"os"
 )
 
 type Client struct {
@@ -54,6 +56,28 @@ func (c *Client) menu() bool {
 
 }
 
+// 封裝重新命名處理(選項模式-3)
+func (c *Client) ReName() bool {
+
+	fmt.Println("===請輸入用戶名稱:")
+	fmt.Scanln(&c.Name)
+
+	SendMsg := "rename/" + c.Name + "\n"
+	_, err := c.conn.Write([]byte(SendMsg))
+	if err != nil {
+		fmt.Println("conn.Write err:", err)
+		return false
+	}
+
+	return true
+}
+
+//處理server回應的訊息，直接顯示到標準輸出即可
+func (c *Client) ServerResp() {
+	//一旦c.conn有資料，就直接copy到stdout標準輸出上，永久阻塞保持監聽
+	io.Copy(os.Stdout, c.conn)
+}
+
 func (c *Client) Run() {
 	for c.flag != 0 {
 		for c.menu() != true {
@@ -69,7 +93,7 @@ func (c *Client) Run() {
 			fmt.Println("私人訊息選項...")
 		case 3:
 			//修改用戶名稱
-			fmt.Println("修改用戶名稱選項...")
+			c.ReName()
 		}
 	}
 }
@@ -93,6 +117,9 @@ func main() {
 		fmt.Println("連接伺服器失敗...")
 		return
 	}
+
+	//另外開啟一個goroutine來處理Server回應的訊息
+	go client.ServerResp()
 
 	fmt.Println("伺服器已連接成功!")
 

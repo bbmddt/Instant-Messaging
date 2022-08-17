@@ -65,8 +65,8 @@ func (u *User) SendMsg(msg string) {
 
 //用戶處理訊息的業務
 func (this *User) DoMessage(msg string) {
+	//查詢當前線上用戶清單
 	if msg == "who" {
-		//查詢當前線上用戶清單
 
 		this.server.mapLock.Lock()
 		for _, user := range this.server.OnlineMap {
@@ -79,7 +79,7 @@ func (this *User) DoMessage(msg string) {
 	} else if len(msg) > 7 && msg[:7] == "rename/" {
 		//訊息格式: rename/金乘五
 		//newName := strings.Split(msg, "/")[1]
-		//原取newName方法太粗糙，優化後用slice取
+		//上為原取newName方法，優化用slice取
 		newName := msg[7:]
 
 		//判斷名字是否與當前線上用戶同名
