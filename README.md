@@ -7,3 +7,6 @@
 - golang socket 監聽(http)
 - go Mutex鎖 (sync.RWMutex 讀寫鎖) 
 - go routine & channel 應用
+
+## Demo
+![](https://github.com/bbmddt/Instant-Messaging/blob/main/IM_Demo.png)
